@@ -5,13 +5,13 @@
   var I18N = window.I18N;
   var CACHE_KEY = "portfolio-repos-v1";
   var CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour, to stay well under GitHub's anonymous rate limit
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // GitHub linguist colours for the languages likely to appear.
   var LANG_COLORS = {
     "Java": "#b07219", "Kotlin": "#A97BFF", "C#": "#178600", "PHP": "#4F5D95",
     "JavaScript": "#f1e05a", "TypeScript": "#3178c6", "Python": "#3572A5",
-    "HTML": "#e34c26", "CSS": "#663399", "Shell": "#89e051", "Dockerfile": "#384d54",
-    "Blade": "#f7523f", "Vue": "#41b883"
+    "HTML": "#e34c26", "CSS": "#663399", "Shell": "#89e051", "Dockerfile": "#384d54"
   };
 
   var state = { lang: detectLang(), repos: null, error: false, filter: "all" };
@@ -41,10 +41,14 @@
   }
   function formatDate(iso) {
     var d = new Date(iso);
-    return d.toLocaleDateString(state.lang === "fr" ? "fr-CA" : "en-CA", { year: "numeric", month: "short" });
+    return d.toLocaleDateString(state.lang === "fr" ? "fr-CA" : "en-CA", { year: "numeric", month: "2-digit" });
   }
-  function prettyName(name) {
-    return name.replace(/[-_]+/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+  function slug(name) {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  }
+  function projectTitle(repo, extra) {
+    if (extra.title && typeof extra.title === "object") return extra.title[state.lang] || extra.title.en;
+    return extra.title || repo.name;
   }
 
   /* ---------- static text ---------- */
@@ -58,33 +62,67 @@
     var toggle = document.getElementById("lang-toggle");
     toggle.textContent = state.lang === "en" ? "FR" : "EN";
     toggle.setAttribute("aria-label", t("lang.switch"));
-    toggle.setAttribute("lang", state.lang === "en" ? "fr" : "en");
   }
 
-  /* ---------- timeline (experience + education) ---------- */
+  /* ---------- typing effect on the first command ---------- */
 
-  function renderTimeline(listId, items) {
+  function typeCommand() {
+    var node = document.getElementById("typed-cmd");
+    var text = t("hero.typed");
+    if (reduceMotion) { node.textContent = text; return; }
+    node.textContent = "";
+    var i = 0;
+    (function step() {
+      node.textContent = text.slice(0, i);
+      if (i++ < text.length) window.setTimeout(step, 90);
+    })();
+  }
+
+  /* ---------- log (experience + education) ---------- */
+
+  function renderLog(listId, items) {
     var list = document.getElementById(listId);
     list.textContent = "";
     items.forEach(function (item) {
       var data = item[state.lang];
-      var li = el("li", "timeline-item" + (item.tech ? " is-tech" : ""));
-      var when = el("p", "timeline-date mono",
-        item.start + (item.end === item.start ? "" : " — " + (item.end || t("experience.present"))));
-      var title = el("h3", "timeline-role", data.role);
-      if (item.tech) title.appendChild(el("span", "badge", t("experience.tech")));
-      var org = el("p", "timeline-org", data.org + (data.place ? " · " + data.place : ""));
-      li.append(when, title, org);
+      var li = el("li", "log-line" + (item.tech ? " is-tech" : ""));
+      var range = item.start + (item.end === item.start ? "" : "→" + (item.end || t("experience.present")));
+      li.appendChild(el("span", "log-date", "[" + range + "]"));
+      var body = el("div", "log-body");
+      var role = el("p", "log-role", data.role);
+      if (item.tech) role.appendChild(el("span", "tag-it", t("experience.tech")));
+      body.appendChild(role);
+      body.appendChild(el("p", "log-org", data.org + (data.place ? " — " + data.place : "")));
+      li.appendChild(body);
       list.appendChild(li);
     });
   }
 
-  /* ---------- skills ---------- */
+  /* ---------- skills as JSON ---------- */
 
-  function renderChips(listId, values) {
-    var list = document.getElementById(listId);
-    list.textContent = "";
-    values.forEach(function (v) { list.appendChild(el("li", "chip", v)); });
+  function renderSkills() {
+    var box = document.getElementById("skills-json");
+    box.textContent = "";
+    var groups = [
+      [t("skills.languages"), SITE.skills.languages],
+      [t("skills.frameworks"), SITE.skills.frameworks],
+      [t("skills.soft"), SITE.skills.soft[state.lang]]
+    ];
+    box.appendChild(el("span", "j-punct", "{"));
+    groups.forEach(function (g, gi) {
+      var row = el("div", "j-row");
+      row.appendChild(el("span", "j-key", '"' + g[0] + '"'));
+      row.appendChild(el("span", "j-punct", ": ["));
+      var values = el("span", "j-values");
+      g[1].forEach(function (v, vi) {
+        values.appendChild(el("span", "j-str", '"' + v + '"'));
+        if (vi < g[1].length - 1) values.appendChild(el("span", "j-punct", ", "));
+      });
+      row.appendChild(values);
+      row.appendChild(el("span", "j-punct", "]" + (gi < groups.length - 1 ? "," : "")));
+      box.appendChild(row);
+    });
+    box.appendChild(el("span", "j-punct", "}"));
   }
 
   /* ---------- projects ---------- */
@@ -121,7 +159,6 @@
         renderProjects();
       })
       .catch(function () {
-        // Fall back to a stale cache if there is one, otherwise show an error.
         if (cached) {
           try { state.repos = JSON.parse(cached).repos; renderProjects(); return; } catch (e) { /* fall through */ }
         }
@@ -148,8 +185,9 @@
     var langs = [];
     repos.forEach(function (r) { if (r.language && langs.indexOf(r.language) === -1) langs.push(r.language); });
     if (langs.length < 2) return;
+    bar.appendChild(el("span", "filters-label", "--lang="));
     ["all"].concat(langs.sort()).forEach(function (lang) {
-      var btn = el("button", "filter", lang === "all" ? t("projects.all") : lang);
+      var btn = el("button", "filter", lang === "all" ? t("projects.all") : lang.toLowerCase());
       btn.type = "button";
       btn.setAttribute("aria-pressed", String(state.filter === lang));
       btn.addEventListener("click", function () { state.filter = lang; renderProjects(); });
@@ -157,48 +195,53 @@
     });
   }
 
-  function projectTitle(repo, extra) {
-    if (extra.title && typeof extra.title === "object") return extra.title[state.lang] || extra.title.en;
-    return extra.title || prettyName(repo.name);
-  }
-
-  function projectCard(repo) {
+  function projectCard(repo, index) {
     var extra = SITE.projects[repo.name] || {};
     var title = projectTitle(repo, extra);
-    var card = el("article", "card project");
+    var card = el("article", "project");
 
     var head = el("div", "project-head");
-    head.appendChild(el("h3", "project-title", title));
-    if (repo.stars > 0) head.appendChild(el("span", "stars mono", "★ " + repo.stars));
+    head.appendChild(el("span", "project-perm", "drwxr-xr-x"));
+    head.appendChild(el("span", "project-index", String(index + 1).padStart(2, "0")));
     card.appendChild(head);
+
+    var h3 = el("h3", "project-title");
+    h3.appendChild(el("span", "project-slash", "~/"));
+    h3.appendChild(document.createTextNode(slug(repo.name)));
+    card.appendChild(h3);
+    card.appendChild(el("p", "project-name", title));
 
     card.appendChild(el("p", "project-desc", extra[state.lang] || repo.description || ""));
 
-    if (repo.topics.length) {
-      var topics = el("ul", "topics");
-      repo.topics.filter(function (tp) { return tp !== "portfolio"; }).slice(0, 5).forEach(function (tp) {
-        topics.appendChild(el("li", "topic mono", tp));
-      });
-      card.appendChild(topics);
+    var topics = repo.topics.filter(function (tp) { return tp !== "portfolio"; }).slice(0, 5);
+    if (topics.length) {
+      var ul = el("ul", "topics");
+      topics.forEach(function (tp) { ul.appendChild(el("li", "topic", "#" + tp)); });
+      card.appendChild(ul);
     }
 
     var foot = el("div", "project-foot");
-    var meta = el("p", "project-meta mono");
+    var meta = el("p", "project-meta");
     if (repo.language) {
       var dot = el("span", "lang-dot");
       dot.style.background = LANG_COLORS[repo.language] || "var(--muted)";
-      meta.append(dot, document.createTextNode(repo.language + " · "));
+      meta.append(dot, document.createTextNode(repo.language));
+      meta.appendChild(el("span", "sep", "·"));
     }
     meta.appendChild(document.createTextNode(t("projects.updated") + " " + formatDate(repo.pushed)));
+    if (repo.stars > 0) {
+      meta.appendChild(el("span", "sep", "·"));
+      meta.appendChild(document.createTextNode("★ " + repo.stars));
+    }
     foot.appendChild(meta);
 
     var links = el("div", "project-links");
-    var code = el("a", "link", t("projects.code") + " ↗");
+    var code = el("a", "link", "[" + t("projects.code") + "]");
     code.href = repo.url; code.target = "_blank"; code.rel = "noopener";
     code.setAttribute("aria-label", t("projects.code") + " — " + title);
     links.appendChild(code);
     if (repo.homepage && /^https?:\/\//.test(repo.homepage)) {
-      var demo = el("a", "link", t("projects.demo") + " ↗");
+      var demo = el("a", "link", "[" + t("projects.demo") + "]");
       demo.href = repo.homepage; demo.target = "_blank"; demo.rel = "noopener";
       links.appendChild(demo);
     }
@@ -212,7 +255,7 @@
     grid.textContent = "";
 
     if (state.error) {
-      var msg = el("p", "status", t("projects.error") + " ");
+      var msg = el("p", "comment error", t("projects.error") + " ");
       var a = el("a", null, t("projects.errorLink"));
       a.href = "https://github.com/" + SITE.githubUser + "?tab=repositories";
       msg.appendChild(a);
@@ -220,7 +263,7 @@
       return;
     }
     if (!state.repos) {
-      grid.appendChild(el("p", "status", t("projects.loading")));
+      grid.appendChild(el("p", "comment", t("projects.loading")));
       return;
     }
 
@@ -228,21 +271,19 @@
     renderFilters(repos);
     var shown = repos.filter(function (r) { return state.filter === "all" || r.language === state.filter; });
     if (!shown.length) {
-      grid.appendChild(el("p", "status", t("projects.empty")));
+      grid.appendChild(el("p", "comment", t("projects.empty")));
       return;
     }
-    shown.forEach(function (r) { grid.appendChild(projectCard(r)); });
+    shown.forEach(function (r, i) { grid.appendChild(projectCard(r, i)); });
   }
 
   /* ---------- render all ---------- */
 
   function render() {
     applyStaticText();
-    renderTimeline("experience-list", SITE.experience);
-    renderTimeline("education-list", SITE.education);
-    renderChips("skills-languages", SITE.skills.languages);
-    renderChips("skills-frameworks", SITE.skills.frameworks);
-    renderChips("skills-soft", SITE.skills.soft[state.lang]);
+    renderLog("experience-list", SITE.experience);
+    renderLog("education-list", SITE.education);
+    renderSkills();
     renderProjects();
   }
 
@@ -254,5 +295,6 @@
   document.getElementById("year").textContent = new Date().getFullYear();
 
   render();
+  typeCommand();
   loadRepos();
 })();

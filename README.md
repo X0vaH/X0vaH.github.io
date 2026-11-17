@@ -8,8 +8,9 @@ My personal portfolio: a small static site (plain HTML, CSS and JavaScript, no b
 
 - **Bilingual (EN / FR)**: language picked from the browser, switchable with the button in the header and remembered in `localStorage`.
 - **Live project grid**: fetched from the GitHub REST API (`/users/X0vaH/repos`), forks and archived repos excluded, filterable by language, cached for one hour to stay under the API rate limit, with a fallback link if GitHub is unreachable.
-- Experience and education timelines, skills, contact.
-- Light and dark themes (follows the system setting), responsive down to phone width, keyboard accessible.
+- Experience and education as logs, skills as JSON, contact.
+- Terminal-style design (JetBrains Mono, prompt-style section titles), responsive down to phone width, keyboard accessible, respects reduced motion.
+- **Internship banner** (March 31 → May 25, 2027) and a **CV (PDF)** button — `assets/CV_Alex_Heroux.pdf`, a public version of my CV without street address or phone number.
 
 ## Structure
 
@@ -17,8 +18,8 @@ My personal portfolio: a small static site (plain HTML, CSS and JavaScript, no b
 index.html   Page skeleton (text keys marked with data-i18n)
 data.js      All content: projects overrides, skills, experience, education, EN/FR strings
 main.js      Rendering, language switch, GitHub fetch + cache
-styles.css   Styles (CSS variables, light/dark)
-assets/      Favicon
+styles.css   Terminal theme (CSS variables)
+assets/      Favicon and CV (PDF)
 ```
 
 ## Editing the content
