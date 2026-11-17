@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Alex Héroux — Developer</title>
+  <meta name="description" content="Portfolio of Alex Héroux, computer science technology student and developer (web, mobile, desktop).">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main" data-i18n="nav.skip">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav container" aria-label="Main">
+      <a class="brand" href="#top" aria-label="Alex Héroux">
+        <span class="brand-mark" aria-hidden="true">AH</span>
+        <span class="brand-name">Alex Héroux</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#projects" data-i18n="nav.projects">Projects</a></li>
+        <li><a href="#experience" data-i18n="nav.experience">Experience</a></li>
+        <li><a href="#skills" data-i18n="nav.skills">Skills</a></li>
+        <li><a href="#education" data-i18n="nav.education">Education</a></li>
+        <li><a href="#contact" data-i18n="nav.contact">Contact</a></li>
+      </ul>
+      <button class="lang-toggle" type="button" id="lang-toggle" aria-label="Passer en français">FR</button>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero container" id="top">
+      <p class="eyebrow mono" data-i18n="hero.eyebrow">// computer science technology student</p>
+      <h1 class="hero-title">
+        <span data-i18n="hero.hello">Hi, I'm</span> <span class="accent">Alex Héroux</span>.
+      </h1>
+      <p class="hero-lead" data-i18n="hero.lead">I build web, mobile and desktop applications — from Laravel APIs and React front ends to Android and Electron clients.</p>
+      <p class="hero-meta mono">
+        <span>📍 Saint-Jean-sur-Richelieu, QC</span>
+        <span data-i18n="hero.languages">🗣️ French · English</span>
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#projects" data-i18n="hero.ctaProjects">See my projects</a>
+        <a class="btn" href="https://github.com/X0vaH" target="_blank" rel="noopener">GitHub ↗</a>
+        <a class="btn" href="#contact" data-i18n="hero.ctaContact">Contact me</a>
+      </div>
+    </section>
+
+    <section class="section container" id="about" aria-labelledby="about-title">
+      <h2 class="section-title" id="about-title"><span class="mono num">01.</span> <span data-i18n="about.title">About</span></h2>
+      <p class="about-text" data-i18n="about.text">I'm finishing my diploma in Computer Science Technology at Cégep de Saint-Jean-sur-Richelieu. My goal is to join the job market as a developer and eventually pursue university studies in computer science, while continuing to grow my skills and gain experience.</p>
+    </section>
+
+    <section class="section container" id="projects" aria-labelledby="projects-title">
+      <h2 class="section-title" id="projects-title"><span class="mono num">02.</span> <span data-i18n="projects.title">Projects</span></h2>
+      <p class="section-sub" data-i18n="projects.sub">Loaded live from my public GitHub repositories.</p>
+      <div class="project-filters" id="project-filters" role="toolbar" aria-label="Filter by language"></div>
+      <div class="project-grid" id="project-grid" aria-live="polite">
+        <p class="status" data-i18n="projects.loading">Loading projects…</p>
+      </div>
+    </section>
+
+    <section class="section container" id="experience" aria-labelledby="experience-title">
+      <h2 class="section-title" id="experience-title"><span class="mono num">03.</span> <span data-i18n="experience.title">Experience</span></h2>
+      <ol class="timeline" id="experience-list"></ol>
+    </section>
+
+    <section class="section container" id="skills" aria-labelledby="skills-title">
+      <h2 class="section-title" id="skills-title"><span class="mono num">04.</span> <span data-i18n="skills.title">Skills</span></h2>
+      <div class="skills-grid">
+        <div class="card">
+          <h3 data-i18n="skills.languages">Programming languages</h3>
+          <ul class="chips" id="skills-languages"></ul>
+        </div>
+        <div class="card">
+          <h3 data-i18n="skills.frameworks">Frameworks &amp; tools</h3>
+          <ul class="chips" id="skills-frameworks"></ul>
+        </div>
+        <div class="card">
+          <h3 data-i18n="skills.soft">Soft skills</h3>
+          <ul class="chips" id="skills-soft"></ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section container" id="education" aria-labelledby="education-title">
+      <h2 class="section-title" id="education-title"><span class="mono num">05.</span> <span data-i18n="education.title">Education</span></h2>
+      <ol class="timeline" id="education-list"></ol>
+    </section>
+
+    <section class="section container contact" id="contact" aria-labelledby="contact-title">
+      <h2 class="section-title" id="contact-title"><span class="mono num">06.</span> <span data-i18n="contact.title">Contact</span></h2>
+      <p class="contact-text" data-i18n="contact.text">Looking for an intern or a junior developer? I'd be happy to talk.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="mailto:alex.heroux@hotmail.com">alex.heroux@hotmail.com</a>
+        <a class="btn" href="https://github.com/X0vaH" target="_blank" rel="noopener">github.com/X0vaH ↗</a>
+      </div>
+      <p class="contact-note" data-i18n="contact.references">References available upon request.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer container">
+    <p class="mono">© <span id="year"></span> Alex Héroux · <span data-i18n="footer.built">Plain HTML, CSS &amp; JavaScript — hosted on GitHub Pages.</span></p>
+  </footer>
+
+  <noscript><p class="container status">JavaScript is required to load the project list. See <a href="https://github.com/X0vaH?tab=repositories">github.com/X0vaH</a>.</p></noscript>
+  <script src="data.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
